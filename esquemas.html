@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapas Mentales - Edad Media</title>
+    <!-- Carga de Tailwind CSS para un diseño limpio y moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Reglas base para contenedores de tipo lienzo (Canvas) */
+        body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+        
+        .map-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Ocultamos barras nativas, el movimiento es por JS */
+            cursor: grab;
+            transition: opacity 0.3s ease-in-out;
+            will-change: transform, opacity;
+        }
+        
+        /* Efecto visual al arrastrar */
+        .map-container.dragging {
+            cursor: grabbing !important;
+        }
+
+        /* Limpiamos estilos de selección nativos al arrastrar */
+        .map-container svg {
+            user-select: none;
+            -webkit-user-drag: none;
+            /* Transición suave para los botones de zoom y rueda del ratón */
+            transition: transform 0.15s ease-out; 
+            transform-origin: center center;
+        }
+
+        /* Al arrastrar, quitamos la transición para que el SVG siga al ratón al instante */
+        .map-container.dragging svg {
+            transition: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 h-screen flex flex-col overflow-hidden text-slate-800">
+
+    <!-- Cabecera y Navegación -->
+    <header class="bg-white shadow-sm z-20 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center py-4">
+                <div class="mb-4 md:mb-0">
+                    <h1 class="text-2xl font-bold text-indigo-700 tracking-tight">Esquemas Geografía</h1>
+                    <p class="text-sm text-slate-500">Mapas mentales</p>
+                </div>
+                
+                <!-- Selector de Mapas (Pestañas) -->
+                <nav class="flex space-x-2 bg-slate-100 p-1 rounded-lg" aria-label="Tabs">
+                    <button id="btn-andalus-cristianos" 
+                            onclick="cambiarMapa('#andalus-cristianos')"
+                            class="tab-btn px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        Al-Andalus y Reinos Cristianos
+                    </button>
+                    <button id="btn-europa-feudal" 
+                            onclick="cambiarMapa('#europa-feudal')"
+                            class="tab-btn px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        La Europa Feudal
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Área Principal de Mapas (Contenedor Relativo para superponer capas) -->
+    <main class="flex-grow relative overflow-hidden bg-slate-50 border-t border-slate-200">
+        
+        <!-- Controles de Zoom Flotantes -->
+        <div class="absolute bottom-6 right-6 z-50 flex flex-col gap-2 bg-white/90 backdrop-blur-sm p-2 rounded-xl shadow-lg border border-slate-200">
+            <button id="btn-zoom-in" class="p-2 bg-white hover:bg-slate-100 text-slate-700 rounded-lg shadow-sm transition" title="Acercar">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            </button>
+            <button id="btn-zoom-out" class="p-2 bg-white hover:bg-slate-100 text-slate-700 rounded-lg shadow-sm transition" title="Alejar">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+            </button>
+            <button id="btn-zoom-reset" class="p-2 bg-white hover:bg-slate-100 text-slate-700 rounded-lg shadow-sm transition" title="Centrar Mapa">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+            </button>
+        </div>
+
+        <!-- MAPA 1: Al-Andalus y Reinos Cristianos -->
+        <div id="container-andalus-cristianos" class="map-container absolute inset-0 z-0 opacity-0 pointer-events-none">
+            <pre class="mermaid">
+                mindmap
+                  root((Península Ibérica
+                  Medieval))
+                    Al_Andalus(Al-Andalus)
+                      Conquista_711(Conquista 711)
+                        Protagonistas(Tariq, Musa, Rey Rodrigo)
+                        Estrategias(Guerra ofensiva, Pactos de rendición, Acuerdos de sumisión)
+                        Causas_Exito(Guerra civil visigoda, Apoyo minorías)
+                      Evolucion_Politica(Evolución Política)
+                        Emirato(Emirato: Omeya, Abderramán I año 756)
+                        Califato(Califato: Abderramán III año 912 - Máximo esplendor)
+                        Taifas(Reinos de Taifas: 1002 tras Almanzor, 1031 fin Califato)
+                        Nazari(Reino Nazarí de Granada: 1238 - 1492)
+                      Sociedad_Economia(Sociedad y Economía)
+                        Musulmanes(Musulmanes: Árabes élite, Sirios, Bereberes, Muladíes)
+                        No_Musulmanes(Otras Religiones: Judíos, Mozárabes)
+                        Economia(Agricultura regadío, Zocos, Comercio, Dinar oro, Dírham plata)
+                      Arte_Legado(Arte y Legado)
+                        Monumentos(Mezquita de Córdoba, Alhambra, Medina Azahara)
+                        Lengua(Palabras: Rambla, Tahona, Zaguán, Alacena)
+                        Toponimos(Guadalquivir, Gibraltar, Guadiana, Murcia, Alcalá)
+                        Gastronomia(Arroz con leche, Mazapán, Alboronía, Bollo maimón)
+                    Reinos_Cristianos(Reinos Cristianos)
+                      Origen(Orígenes Siglos VIII - X)
+                        Reino_Astur(Reino Astur y León: Covadonga 722, Capital Oviedo a León)
+                        Castilla(Castilla: De Condado a Reino con Fernán González S.X)
+                        Marca_Hisp(Marca Hispánica: Apoyo Carolingio - Aragón, Navarra, Cataluña)
+                      Expansion(Evolución Siglos XI - XIII)
+                        Impulso(Muerte de Sancho III divide territorios)
+                        Coronas(Corona de Castilla y Corona de Aragón)
+                        Hitos(Toledo 1085, Navas de Tolosa 1212)
+                      Repoblacion(Sistemas de Repoblación)
+                        Temprana(S. VIII-X: Presura, Aprisio, Carta Puebla, Monasterios)
+                        Tardia(S. XI-XIII: Concejos, Órdenes Militares, Capitulaciones, Feudos)
+                      Instituciones(Instituciones)
+                        Castilla_Inst(Castilla: Cortes únicas sin poder legislativo, Corregidores)
+                        Aragon_Inst(Aragón: Cortes independientes, Pactismo, Generalitats)
+                        Navarra_Inst(Navarra: Fuero General, Consejo de Navarra)
+                      Conflictos(Minorías y Conflictos)
+                        Religiosos(Mudéjares, Judíos sefardíes, Pogromos, Leyes Ayllón 1412)
+                        Sociales(Antiseñoriales: Guerras Remensas en Aragón, Irmandiñas en Galicia)
+            </pre>
+        </div>
+
+        <!-- MAPA 2: Europa Feudal -->
+        <div id="container-europa-feudal" class="map-container absolute inset-0 z-0 opacity-0 pointer-events-none">
+            <pre class="mermaid">
+                mindmap
+                  root((La Europa Feudal))
+                    Imperio_Carolingio(Imperio Carolingio)
+                      Origen(Origen: Reino Franco tras expulsar visigodos)
+                      Carlomagno(Emperador Carlomagno 800 d.C.)
+                        Poder(Cúspide: Poder religioso, político y militar)
+                        Objetivo(Unificación política y cultural de base cristiana)
+                      Organizacion(Organización Territorial)
+                        Territorios(Condados y Marcas fronterizas)
+                        Papa(Alianza Papal: Creación Estados Pontificios)
+                      Division(Fin y División)
+                        Tratado(Tratado de Verdún 843 d.C.)
+                        Fragmentacion(Francia Occidental, Francia Central, Francia Oriental/Germania)
+                    Feudalismo(Sistema Feudal)
+                      Concepto(Sistema social, económico y político medieval)
+                      Sociedad(Sociedad Estamental)
+                        Privilegiados(Privilegiados: Rey y Vasallos/Señores)
+                        No_Privilegiados(No Privilegiados: Siervos)
+                      Relaciones(Red de Dependencias)
+                        Pacto(Pacto Vasallático: Ayuda militar/económica y consejo vs Sustento y defensa)
+                        Servidumbre(Siervos: Sin libertad, atados a la tierra, prestaciones personales)
+                        Derechos(Privilegios Señoriales: Herencia, Derechos jurisdiccionales)
+                      Economia(Economía Feudal Rural)
+                        Reserva(Reserva Señorial: Uso exclusivo del Señor, vivienda, mejores tierras)
+                        Terra(Terra Indominicata/Mansos: Uso de siervos para subsistir)
+                        Comunales(Tierras Comunales: Bosques y pastos de uso compartido)
+                        Diezmo(Tributos: El Diezmo a la Iglesia - 10%)
+                    Arte_Medieval(Arte y Cultura Medieval)
+                      Romanico(Arte Románico)
+                        Arquitectura_R(Arquitectura: Muros gruesos, arcos medio punto, bóveda cañón, poca luz)
+                        Pintura_R(Pintura: Didáctica, religiosa, jerárquica, falta naturalismo)
+                        Escultura_R(Escultura: Simbólica, frontal, adaptada al marco arquitectónico)
+                      Gotico(Arte Gótico)
+                        Arquitectura_G(Arquitectura: Vidrieras, edificios altos, arco apuntado, arbotantes)
+                        Pintura_G(Pintura: Mayor realismo, perspectiva, profundidad, colores luminosos)
+                        Escultura_G(Escultura: Naturalismo, expresividad, figuras estilizadas, independiente)
+                    Contexto_Global(Génesis y Amenazas)
+                      Invasiones(Segundas Invasiones)
+                        Pueblos(Normandos/Vikingos en noroeste Francia, Húngaros)
+                        Efectos(Ruralización, Inseguridad, Trabajo dependiente)
+                      Conflictos_Rel(Disputas Religiosas)
+                        Cisma(Cisma de Oriente 1054 d.C.)
+                        Bandos(Occidente Católico, Oriente Ortodoxo, Expansión del Islam)
+            </pre>
+        </div>
+    </main>
+
+    <!-- Lógica Core: Renderizado, Pan, Zoom y Pestañas -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        
+        // --- 1. CONFIGURACIÓN DE MERMAID (Paleta Pastel Custom) ---
+        mermaid.initialize({ 
+            startOnLoad: false, // Desactivado para controlar el ciclo de vida del SVG
+            theme: 'base',
+            themeVariables: {
+                // Definición de gama de colores PASTEL Premium
+                cScale0: '#ffb3ba', // Rojo pastel
+                cScale1: '#ffdfba', // Naranja pastel
+                cScale2: '#ffffba', // Amarillo pastel
+                cScale3: '#baffc9', // Verde pastel
+                cScale4: '#bae1ff', // Azul pastel
+                cScale5: '#e2cbff', // Morado pastel
+                cScale6: '#ffc6ff', // Rosa pastel
+                cScale7: '#e2f0cb', // Lima pastel
+                
+                // Estilo de texto y líneas
+                textColor: '#1e293b', // Gris pizarra oscuro para contraste alto
+                primaryTextColor: '#1e293b',
+                lineColor: '#cbd5e1', // Líneas grises suaves
+                
+                // Formato general
+                fontFamily: 'ui-sans-serif, system-ui, sans-serif'
+            }
+        });
+
+        // --- 2. ESTADO GLOBAL DE LA APLICACIÓN ---
+        const AppState = {
+            activeHash: '#andalus-cristianos',
+            // Escala 1.8 inicial para garantizar que el centro se ve MUY GRANDE
+            maps: {
+                '#andalus-cristianos': { scale: 1.8, x: 0, y: 0 },
+                '#europa-feudal': { scale: 1.8, x: 0, y: 0 }
+            }
+        };
+
+        const DOM = {
+            maps: {
+                '#andalus-cristianos': document.getElementById('container-andalus-cristianos'),
+                '#europa-feudal': document.getElementById('container-europa-feudal')
+            },
+            btns: {
+                '#andalus-cristianos': document.getElementById('btn-andalus-cristianos'),
+                '#europa-feudal': document.getElementById('btn-europa-feudal')
+            }
+        };
+
+        // --- 3. INICIALIZACIÓN Y RENDERIZADO ASÍNCRONO ---
+        async function init() {
+            // Renderizamos los SVG explícitamente
+            await mermaid.run({ querySelector: '.mermaid' });
+            
+            // Eliminamos la restricción de encogimiento nativa de Mermaid en los SVG
+            document.querySelectorAll('.map-container svg').forEach(svg => {
+                svg.style.maxWidth = 'none';
+                svg.style.height = 'auto';
+            });
+
+            setupPanAndZoom();
+            
+            // Iniciar pestaña según URL o defecto
+            const initialHash = window.location.hash || '#andalus-cristianos';
+            window.cambiarMapa(initialHash);
+        }
+
+        // --- 4. MOTOR DE INFINITE CANVAS (PANE/ZOOM) ---
+        function applyTransform(hash) {
+            const state = AppState.maps[hash];
+            const svg = DOM.maps[hash].querySelector('svg');
+            if (svg) {
+                // Centrado matemático + escala
+                svg.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
+            }
+        }
+
+        function setupPanAndZoom() {
+            Object.keys(DOM.maps).forEach(hash => {
+                const container = DOM.maps[hash];
+                let isDragging = false;
+                let startX, startY;
+
+                // Carga del estado inicial
+                applyTransform(hash);
+
+                // Zoom con Rueda del Ratón
+                container.addEventListener('wheel', (e) => {
+                    e.preventDefault(); // Evitar scroll de la página
+                    const state = AppState.maps[hash];
+                    const zoomFactor = 0.15;
+                    // Detectamos dirección del scroll
+                    const delta = Math.sign(e.deltaY) * -1; 
+                    // Limitamos el zoom entre 0.3x y 4x
+                    state.scale = Math.max(0.3, Math.min(state.scale + (delta * zoomFactor), 4));
+                    applyTransform(hash);
+                }, { passive: false });
+
+                // Iniciar Paneo (Arrastre)
+                container.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    container.classList.add('dragging');
+                    const state = AppState.maps[hash];
+                    // Restar el offset actual para evitar saltos
+                    startX = e.clientX - state.x;
+                    startY = e.clientY - state.y;
+                });
+
+                // Detener Paneo
+                const stopDrag = () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        container.classList.remove('dragging');
+                    }
+                };
+                window.addEventListener('mouseup', stopDrag);
+                container.addEventListener('mouseleave', stopDrag);
+
+                // Movimiento
+                container.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    const state = AppState.maps[hash];
+                    state.x = e.clientX - startX;
+                    state.y = e.clientY - startY;
+                    applyTransform(hash);
+                });
+            });
+        }
+
+        // --- 5. CONTROLES DE ZOOM FLOTANTES ---
+        document.getElementById('btn-zoom-in').addEventListener('click', () => {
+            const state = AppState.maps[AppState.activeHash];
+            state.scale = Math.min(state.scale + 0.3, 4);
+            applyTransform(AppState.activeHash);
+        });
+
+        document.getElementById('btn-zoom-out').addEventListener('click', () => {
+            const state = AppState.maps[AppState.activeHash];
+            state.scale = Math.max(state.scale - 0.3, 0.3);
+            applyTransform(AppState.activeHash);
+        });
+
+        document.getElementById('btn-zoom-reset').addEventListener('click', () => {
+            const state = AppState.maps[AppState.activeHash];
+            // Resetea coordenadas al centro y zoom grande inicial
+            state.scale = 1.8;
+            state.x = 0;
+            state.y = 0;
+            applyTransform(AppState.activeHash);
+        });
+
+        // --- 6. GESTIÓN DE PESTAÑAS (SPA ROUTING) ---
+        window.cambiarMapa = function(hash) {
+            if (!DOM.maps[hash]) hash = '#andalus-cristianos';
+            AppState.activeHash = hash;
+
+            if (window.location.hash !== hash) {
+                window.history.pushState(null, null, hash);
+            }
+
+            Object.keys(DOM.maps).forEach(key => {
+                const container = DOM.maps[key];
+                const btn = DOM.btns[key];
+                
+                if (key === hash) {
+                    // Activar y asegurar que vuelve a aplicar su propia transformación
+                    container.style.opacity = '1';
+                    container.style.zIndex = '10';
+                    container.style.pointerEvents = 'auto';
+                    btn.className = "tab-btn px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 bg-indigo-600 text-white shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2";
+                    applyTransform(key);
+                } else {
+                    // Desactivar
+                    container.style.opacity = '0';
+                    container.style.zIndex = '0';
+                    container.style.pointerEvents = 'none';
+                    btn.className = "tab-btn px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm";
+                }
+            });
+        };
+
+        window.addEventListener('hashchange', () => cambiarMapa(window.location.hash));
+
+        // Iniciar App
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
